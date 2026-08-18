@@ -26,6 +26,7 @@ public class ProductService {
     private final InventoryService inventoryService;
 
     @Transactional
+    @org.springframework.cache.annotation.CacheEvict(value = "productCatalogCache", allEntries = true)
     public ProductResponseDTO createProduct(ProductRequestDTO request) {
         String sku = request.sku().trim().toUpperCase();
         log.info("Creating product with SKU: {}", sku);
@@ -60,6 +61,7 @@ public class ProductService {
     }
 
     @Transactional(readOnly = true)
+    @org.springframework.cache.annotation.Cacheable(value = "productCatalogCache", key = "#sku")
     public ProductResponseDTO getProductBySku(String sku) {
         return productRepository.findBySku(sku.trim().toUpperCase())
                 .map(ProductResponseDTO::fromEntity)
@@ -73,6 +75,7 @@ public class ProductService {
     }
 
     @Transactional
+    @org.springframework.cache.annotation.CacheEvict(value = "productCatalogCache", key = "#request.sku()")
     public ProductResponseDTO updateProduct(UUID id, ProductRequestDTO request) {
         log.info("Updating product ID: {}", id);
 
@@ -97,6 +100,7 @@ public class ProductService {
     }
 
     @Transactional
+    @org.springframework.cache.annotation.CacheEvict(value = "productCatalogCache", allEntries = true)
     public void deleteProduct(UUID id) {
         log.info("Deactivating product ID: {}", id);
         Product product = productRepository.findById(id)

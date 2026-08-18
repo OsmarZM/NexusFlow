@@ -48,12 +48,28 @@ spring:
     listener:
       missing-topics-fatal: false
 
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      timeout: 2000ms
+
+  cache:
+    type: redis
+    redis:
+      time-to-live: 600000ms # 10 minutes default
+      cache-null-values: false
+
 nexusflow:
   security:
     jwt:
       secret-key: ${JWT_SECRET:404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970}
       expiration-minutes: ${JWT_EXPIRATION_MINUTES:120}
       issuer: nexusflow-auth-service
+  rate-limit:
+    enabled: ${RATE_LIMIT_ENABLED:true}
+    capacity: ${RATE_LIMIT_CAPACITY:100}
+    refill-tokens-per-minute: ${RATE_LIMIT_REFILL_PER_MINUTE:100}
   kafka:
     topics:
       order-created: orders.created
