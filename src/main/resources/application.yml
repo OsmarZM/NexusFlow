@@ -31,12 +31,37 @@ spring:
     baseline-on-migrate: true
     locations: classpath:db/migration
 
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        spring.json.add.type.headers: false
+    consumer:
+      group-id: nexusflow-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "com.nexusflow.*"
+    listener:
+      missing-topics-fatal: false
+
 nexusflow:
   security:
     jwt:
       secret-key: ${JWT_SECRET:404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970}
       expiration-minutes: ${JWT_EXPIRATION_MINUTES:120}
       issuer: nexusflow-auth-service
+  kafka:
+    topics:
+      order-created: orders.created
+      order-cancelled: orders.cancelled
+      inventory-reserved: inventory.reserved
+      inventory-released: inventory.released
+      payment-requested: payments.requested
+      payment-processed: payments.processed
 
 server:
   port: 8080

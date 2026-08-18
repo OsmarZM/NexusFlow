@@ -24,6 +24,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -35,6 +36,7 @@ public class OrderService {
     private final CustomerRepository customerRepository;
     private final ProductRepository productRepository;
     private final InventoryService inventoryService;
+    private final com.nexusflow.messaging.producer.OrderEventProducer orderEventProducer;
 
     @Transactional
     public OrderResponseDTO createOrder(CreateOrderRequestDTO request) {
@@ -85,6 +87,28 @@ public class OrderService {
         Order savedOrder = orderRepository.save(order);
         log.info("Order successfully created with ID: {} and total: {}", savedOrder.getId(), savedOrder.getTotalAmount());
 
+        // Publish OrderCreatedEvent to Kafka
+        List<com.nexusflow.messaging.event.OrderCreatedEvent.OrderItemPayload> eventItems = savedOrder.getItems().stream()
+                .map(item -> new com.nexusflow.messaging.event.OrderCreatedEvent.OrderItemPayload(
+                        item.getProduct().getId(),
+                        item.getSku(),
+                        item.getProduct().getName(),
+                        item.getUnitPrice(),
+                        item.getQuantity(),
+                        item.getSubtotal()
+                ))
+                .toList();
+
+        com.nexusflow.messaging.event.OrderCreatedEvent event = com.nexusflow.messaging.event.OrderCreatedEvent.create(
+                savedOrder.getId(),
+                savedOrder.getCustomer().getId(),
+                savedOrder.getCustomer().getEmail(),
+                savedOrder.getTotalAmount(),
+                eventItems,
+                UUID.randomUUID().toString()
+        );
+        orderEventProducer.publishOrderCreated(event);
+
         return OrderResponseDTO.fromEntity(savedOrder);
     }
 
@@ -129,6 +153,15 @@ public class OrderService {
 
         order.setStatus(OrderStatus.CANCELLED);
         Order updated = orderRepository.save(order);
+
+        // Publish OrderCancelledEvent
+        com.nexusflow.messaging.event.OrderCancelledEvent cancelEvent = com.nexusflow.messaging.event.OrderCancelledEvent.create(
+                updated.getId(),
+                reason,
+                UUID.randomUUID().toString()
+        );
+        orderEventProducer.publishOrderCancelled(cancelEvent);
+
         log.info("Order ID: {} cancelled and reserved stock released.", id);
         return OrderResponseDTO.fromEntity(updated);
     }
