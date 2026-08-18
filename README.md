@@ -190,7 +190,7 @@ Execute all automated unit and integration tests:
 - [x] **V0.2 — Security & RBAC:** Spring Security 6, Stateless JWT, Role-based method security (`ADMIN`, `WAREHOUSE_OPERATOR`, `FINANCE`, `CUSTOMER`), Seeded Administrator.
 - [x] **V0.3 — Concurrency & High-Load Testing:** Multithreaded race condition simulation, CountDownLatch test suite, guaranteed zero overselling.
 - [x] **V0.4 — Event-Driven Architecture:** Apache Kafka integration (KRaft mode), strongly-typed domain events (`OrderCreatedEvent`, `OrderCancelledEvent`, `PaymentRequestedEvent`), partition ordering, and correlation headers.
-- [ ] **V0.5 — Distributed Resilience:** Transactional Outbox Pattern, Saga Choreography, Idempotent Consumers.
+- [x] **V0.5 — Distributed Resilience:** Transactional Outbox Pattern, Saga Choreography, Compensating Transactions (payment failure triggers stock release), and Idempotent Consumers.
 - [ ] **V0.6 — Performance & Caching:** Redis 2nd-level caching for Catalog, Rate Limiting (Bucket4j/Redis).
 - [ ] **V0.7 — Testing Excellence:** Testcontainers integration tests, GitHub Actions CI/CD Pipeline.
 - [ ] **V1.0 — Observability & Cloud Native:** OpenTelemetry distributed tracing, Prometheus, Grafana dashboards, Kubernetes manifests.
