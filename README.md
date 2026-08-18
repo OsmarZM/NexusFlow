@@ -187,7 +187,7 @@ Execute all automated unit and integration tests:
 ## 🗺️ Roadmap & Releases
 
 - [x] **V0.1 — Core Modular Monolith:** Customers, Products, Inventory (Locking), Orders, Flyway, PostgreSQL, OpenAPI & ADRs.
-- [ ] **V0.2 — Security & RBAC:** Spring Security 6, Stateless JWT, Role-based method security (`ADMIN`, `WAREHOUSE`, `CUSTOMER`).
+- [x] **V0.2 — Security & RBAC:** Spring Security 6, Stateless JWT, Role-based method security (`ADMIN`, `WAREHOUSE_OPERATOR`, `FINANCE`, `CUSTOMER`), Seeded Administrator.
 - [ ] **V0.3 — Concurrency & High-Load Testing:** Multithreaded race condition simulation and benchmark suite.
 - [ ] **V0.4 — Event-Driven Architecture:** Apache Kafka integration (`orders.created`, `inventory.reserved`).
 - [ ] **V0.5 — Distributed Resilience:** Transactional Outbox Pattern, Saga Choreography, Idempotent Consumers.
