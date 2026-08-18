@@ -37,6 +37,7 @@ public class OrderService {
     private final ProductRepository productRepository;
     private final InventoryService inventoryService;
     private final com.nexusflow.messaging.producer.OrderEventProducer orderEventProducer;
+    private final com.nexusflow.shared.metrics.BusinessMetricsService businessMetricsService;
 
     @Transactional
     public OrderResponseDTO createOrder(CreateOrderRequestDTO request) {
@@ -108,6 +109,7 @@ public class OrderService {
                 UUID.randomUUID().toString()
         );
         orderEventProducer.publishOrderCreated(event);
+        businessMetricsService.incrementOrdersCreated();
 
         return OrderResponseDTO.fromEntity(savedOrder);
     }
@@ -161,6 +163,7 @@ public class OrderService {
                 UUID.randomUUID().toString()
         );
         orderEventProducer.publishOrderCancelled(cancelEvent);
+        businessMetricsService.incrementOrdersCancelled();
 
         log.info("Order ID: {} cancelled and reserved stock released.", id);
         return OrderResponseDTO.fromEntity(updated);
@@ -184,6 +187,8 @@ public class OrderService {
 
         order.setStatus(OrderStatus.PAID);
         Order updated = orderRepository.save(order);
+        businessMetricsService.incrementPaymentsApproved();
+
         log.info("Order ID: {} successfully paid and confirmed.", id);
         return OrderResponseDTO.fromEntity(updated);
     }

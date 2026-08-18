@@ -193,7 +193,7 @@ Execute all automated unit and integration tests:
 - [x] **V0.5 — Distributed Resilience:** Transactional Outbox Pattern, Saga Choreography, Compensating Transactions (payment failure triggers stock release), and Idempotent Consumers.
 - [x] **V0.6 — Performance & Caching:** Redis 7 2nd-level caching (`@Cacheable`, `@CacheEvict`), Distributed Token Bucket / Sliding Window Rate Limiting (HTTP 429 RFC 7807) with fail-open fallback.
 - [x] **V0.7 — Testing Excellence & CI/CD:** Testcontainers for PostgreSQL 16, Kafka, Redis; Multi-stage Dockerfile; GitHub Actions automated CI/CD pipeline (`mvn clean verify`).
-- [ ] **V1.0 — Observability & Cloud Native:** OpenTelemetry distributed tracing, Prometheus, Grafana dashboards, Kubernetes manifests.
+- [x] **V1.0 — Observability & Cloud Native:** Micrometer Prometheus metrics, OpenTelemetry distributed tracing (W3C trace context), Prometheus & Grafana docker orchestration, and production Kubernetes manifests (`k8s/` Deployment, Service, ConfigMap, Secret, HPA autoscaler).
 
 ---
 

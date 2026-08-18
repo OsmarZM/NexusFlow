@@ -53,6 +53,9 @@ class OrderServiceTest {
     @Mock
     private com.nexusflow.messaging.producer.OrderEventProducer orderEventProducer;
 
+    @Mock
+    private com.nexusflow.shared.metrics.BusinessMetricsService businessMetricsService;
+
     @InjectMocks
     private OrderService orderService;
 
