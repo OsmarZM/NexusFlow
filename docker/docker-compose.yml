@@ -1,0 +1,35 @@
+services:
+  nexusflow-postgres:
+    image: postgres:16-alpine
+    container_name: nexusflow-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: nexusflow_db
+      POSTGRES_USER: nexusflow_user
+      POSTGRES_PASSWORD: nexusflow_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nexusflow_user -d nexusflow_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: nexusflow-pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@nexusflow.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    depends_on:
+      nexusflow-postgres:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
+    driver: local
