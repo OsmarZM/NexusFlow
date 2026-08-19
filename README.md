@@ -70,30 +70,30 @@ graph TB
         GRAF["📊 Grafana (Port 3000)"]
     end
 
-    ERP -->|HTTP + JWT| GW
-    SPA -->|HTTP + JWT| GW
+    ERP -->|"HTTP + JWT"| GW
+    SPA -->|"HTTP + JWT"| GW
     GW --> AUTH
     GW --> PROD
     GW --> ORD
 
-    PROD <-->|Cache Hit / Invalidate| REDIS
-    PROD <-->|CRUD Data| PG
+    PROD <-->|"Cache Hit / Invalidate"| REDIS
+    PROD <-->|"CRUD Data"| PG
 
-    ORD -->|1. Validate & Reserve Stock| INV
-    INV <-->|Pessimistic Lock FOR UPDATE| PG
-    ORD -->|2. Create Order & Write Outbox| PG
+    ORD -->|"1. Validate & Reserve Stock"| INV
+    INV <-->|"Pessimistic Lock FOR UPDATE"| PG
+    ORD -->|"2. Create Order & Write Outbox"| PG
 
-    OUTBOX <-->|Poll PENDING Events| PG
-    OUTBOX -->|3. Publish Event| KAFKA
+    OUTBOX <-->|"Poll PENDING Events"| PG
+    OUTBOX -->|"3. Publish Event"| KAFKA
 
-    KAFKA -->|4. Consume Event| SAGA
-    SAGA -->|5. Trigger Payment| PAY
-    PAY -->|6. Payment Result| OUTBOX
-    SAGA -->|7A. Confirm Stock & Order (Success)| INV
-    SAGA -->|7B. Compensate: Release Stock (Failure)| INV
+    KAFKA -->|"4. Consume Event"| SAGA
+    SAGA -->|"5. Trigger Payment"| PAY
+    PAY -->|"6. Payment Result"| OUTBOX
+    SAGA -->|"7A. Confirm Stock & Order"| INV
+    SAGA -->|"7B. Compensate: Release Stock"| INV
 
-    METRICS -->|Export /actuator/prometheus| PROM
-    PROM -->|Visualize| GRAF
+    METRICS -->|"Export Prometheus"| PROM
+    PROM -->|"Visualize"| GRAF
 ```
 
 ---

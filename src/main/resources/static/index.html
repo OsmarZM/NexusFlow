@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NexusFlow — Enterprise Distributed Order & Inventory Engine</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/styles.css">
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="dark-theme">
+    <!-- Background Glow Elements -->
+    <div class="glow-orb glow-cyan"></div>
+    <div class="glow-orb glow-purple"></div>
+
+    <div class="app-layout">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="brand-container">
+                <div class="brand-logo">
+                    <svg width="28" height="28" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M6 6L14 16L6 26" stroke="#00F0FF" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M26 6L18 16L26 26" stroke="#A855F7" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        <circle cx="16" cy="16" r="3.5" fill="#00F0FF" />
+                    </svg>
+                </div>
+                <div class="brand-text">
+                    <span class="brand-name">NEXUS<span class="highlight">FLOW</span></span>
+                    <span class="brand-subtitle">DISTRIBUTED FLOW ENGINE</span>
+                </div>
+            </div>
+
+            <nav class="nav-menu">
+                <button class="nav-item active" data-tab="overview">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                    <span>Overview</span>
+                </button>
+                <button class="nav-item" data-tab="orders">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
+                    <span>Orders</span>
+                    <span class="badge" id="badge-orders">0</span>
+                </button>
+                <button class="nav-item" data-tab="inventory">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+                    <span>Inventory</span>
+                </button>
+                <button class="nav-item" data-tab="kafka">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+                    <span>Kafka Stream</span>
+                </button>
+                <button class="nav-item" data-tab="payments">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
+                    <span>Payments & Saga</span>
+                </button>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="system-status-card">
+                    <div class="status-indicator-dot online"></div>
+                    <div class="status-info">
+                        <span class="status-title">System Online</span>
+                        <span class="status-meta" id="backend-health-text">Postgres 16 • Redis 7 • Kafka</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Workspace -->
+        <main class="main-content">
+            <!-- Header Bar -->
+            <header class="topbar">
+                <div class="topbar-search">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    <input type="text" id="global-search" placeholder="Search orders, SKUs, transactions, outbox events...">
+                </div>
+
+                <div class="topbar-actions">
+                    <div class="live-pulse-badge">
+                        <span class="pulse-ring"></span>
+                        <span class="pulse-dot"></span>
+                        LIVE SYNC
+                    </div>
+
+                    <a href="/swagger-ui.html" target="_blank" class="icon-btn" title="OpenAPI / Swagger UI">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                        Swagger
+                    </a>
+
+                    <div class="user-pill" id="user-profile-pill">
+                        <div class="avatar">ADM</div>
+                        <div class="user-details">
+                            <span class="user-name" id="user-display-name">Admin User</span>
+                            <span class="user-role" id="user-display-role">ROLE_ADMIN</span>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- TAB 1: OVERVIEW -->
+            <section class="tab-pane active" id="tab-overview">
+                <!-- Metrics Bar -->
+                <div class="metrics-grid">
+                    <div class="metric-card cyan-glow">
+                        <div class="metric-header">
+                            <span class="metric-label">Active Orders</span>
+                            <div class="metric-icon cyan">🛒</div>
+                        </div>
+                        <div class="metric-value" id="metric-active-orders">0</div>
+                        <div class="metric-footer">
+                            <span class="trend up">↑ +14.2%</span> vs last hour
+                        </div>
+                    </div>
+
+                    <div class="metric-card purple-glow">
+                        <div class="metric-header">
+                            <span class="metric-label">Completed Orders</span>
+                            <div class="metric-icon purple">✅</div>
+                        </div>
+                        <div class="metric-value" id="metric-completed-orders">0</div>
+                        <div class="metric-footer">
+                            <span class="trend up">100% Saga Success</span>
+                        </div>
+                    </div>
+
+                    <div class="metric-card emerald-glow">
+                        <div class="metric-header">
+                            <span class="metric-label">Kafka Event Stream</span>
+                            <div class="metric-icon emerald">🌪️</div>
+                        </div>
+                        <div class="metric-value" id="metric-kafka-throughput">1,842 <small>msg/s</small></div>
+                        <div class="metric-footer">
+                            <span class="trend neutral">KRaft Mode Active</span>
+                        </div>
+                    </div>
+
+                    <div class="metric-card amber-glow">
+                        <div class="metric-header">
+                            <span class="metric-label">Payment Volume</span>
+                            <div class="metric-icon amber">💳</div>
+                        </div>
+                        <div class="metric-value" id="metric-payment-vol">R$ 245.8k</div>
+                        <div class="metric-footer">
+                            <span class="trend up">Transactional Outbox</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Main Flow Map & Kafka Stats Grid -->
+                <div class="grid-2-col">
+                    <!-- Real Time Orders Flow Card -->
+                    <div class="glass-card full-height">
+                        <div class="card-header">
+                            <div class="header-title">
+                                <h3>REAL-TIME DISTRIBUTED ORDERS FLOW</h3>
+                                <p>Global Event Mesh: Multi-channel Ingestion & Saga Coordination</p>
+                            </div>
+                            <div class="header-tags">
+                                <span class="tag tag-cyan" id="tag-active-cnt">3,421 Active</span>
+                                <span class="tag tag-purple" id="tag-comp-cnt">2.5k Completed</span>
+                                <span class="tag tag-red" id="tag-fail-cnt">0 Compensated</span>
+                            </div>
+                        </div>
+                        
+                        <div class="flow-map-container">
+                            <div class="flow-map-overlay">
+                                <div class="flow-node node-ny">
+                                    <div class="node-dot"></div>
+                                    <span>New York (ERP)</span>
+                                </div>
+                                <div class="flow-node node-ldn">
+                                    <div class="node-dot"></div>
+                                    <span>London (API Gateway)</span>
+                                </div>
+                                <div class="flow-node node-sp">
+                                    <div class="node-dot active"></div>
+                                    <span>São Paulo (Nexus Core)</span>
+                                </div>
+                                <div class="flow-node node-tky">
+                                    <div class="node-dot"></div>
+                                    <span>Tokyo (Marketplace)</span>
+                                </div>
+                            </div>
+                            <!-- Canvas Chart -->
+                            <canvas id="ordersFlowChart" height="180"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Kafka Topic Throughput Card -->
+                    <div class="glass-card">
+                        <div class="card-header">
+                            <div class="header-title">
+                                <h3>KAFKA TOPIC THROUGHPUT</h3>
+                                <p>Event-driven message partitions & real-time consumer lag</p>
+                            </div>
+                            <button class="btn-ghost-sm" id="btn-refresh-kafka">Refresh</button>
+                        </div>
+                        <div class="topic-bars">
+                            <div class="topic-row">
+                                <div class="topic-meta">
+                                    <span class="topic-name">orders.created</span>
+                                    <span class="topic-rate" id="rate-orders-created">1,842 msg/sec</span>
+                                </div>
+                                <div class="progress-bar-bg"><div class="progress-bar-fill cyan-bar" style="width: 82%;"></div></div>
+                            </div>
+                            <div class="topic-row">
+                                <div class="topic-meta">
+                                    <span class="topic-name">inventory.reserved</span>
+                                    <span class="topic-rate" id="rate-inv-reserved">2,109 msg/sec</span>
+                                </div>
+                                <div class="progress-bar-bg"><div class="progress-bar-fill purple-bar" style="width: 94%;"></div></div>
+                            </div>
+                            <div class="topic-row">
+                                <div class="topic-meta">
+                                    <span class="topic-name">payments.processed</span>
+                                    <span class="topic-rate" id="rate-pay-proc">985 msg/sec</span>
+                                </div>
+                                <div class="progress-bar-bg"><div class="progress-bar-fill emerald-bar" style="width: 58%;"></div></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Lower Row: Inventory & Payment Statuses -->
+                <div class="grid-2-col">
+                    <div class="glass-card">
+                        <div class="card-header">
+                            <div class="header-title">
+                                <h3>INVENTORY STOCK LEVELS</h3>
+                                <p>Pessimistic Locking Balances (Zero Overselling Guarantee)</p>
+                            </div>
+                            <span class="status-pill status-active">Pessimistic Locking Active</span>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="inventoryStockChart" height="140"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="glass-card">
+                        <div class="card-header">
+                            <div class="header-title">
+                                <h3>PAYMENT TRANSACTION STATUSES</h3>
+                                <p>Saga Step Execution & Compensation Audits</p>
+                            </div>
+                        </div>
+                        <div class="donut-stats-grid">
+                            <div class="donut-col">
+                                <canvas id="paymentDonutChart" width="130" height="130"></canvas>
+                            </div>
+                            <div class="donut-legend">
+                                <div class="legend-item">
+                                    <span class="legend-dot cyan"></span>
+                                    <span class="legend-label">Successful (Paid)</span>
+                                    <span class="legend-val" id="legend-success-pct">88%</span>
+                                </div>
+                                <div class="legend-item">
+                                    <span class="legend-dot purple"></span>
+                                    <span class="legend-label">Pending / Waiting</span>
+                                    <span class="legend-val" id="legend-pending-pct">7%</span>
+                                </div>
+                                <div class="legend-item">
+                                    <span class="legend-dot red"></span>
+                                    <span class="legend-label">Compensated (Failed)</span>
+                                    <span class="legend-val" id="legend-failed-pct">5%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 2: ORDERS -->
+            <section class="tab-pane" id="tab-orders">
+                <div class="pane-header">
+                    <div>
+                        <h2>Distributed Orders</h2>
+                        <p>Real-time order lifecycle, aggregate calculations, and stock reservation states</p>
+                    </div>
+                    <button class="btn-primary" id="btn-open-order-modal">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                        Create New Order
+                    </button>
+                </div>
+
+                <div class="table-card glass-card">
+                    <table class="data-table" id="orders-table">
+                        <thead>
+                            <tr>
+                                <th>Order ID</th>
+                                <th>Customer ID</th>
+                                <th>Total (BRL)</th>
+                                <th>Status</th>
+                                <th>Items</th>
+                                <th>Created At</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="orders-tbody">
+                            <!-- Populated via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- TAB 3: INVENTORY -->
+            <section class="tab-pane" id="tab-inventory">
+                <div class="pane-header">
+                    <div>
+                        <h2>Catalog & Inventory Lock Engine</h2>
+                        <p>Physical quantities, active reservations, and Redis cached catalog</p>
+                    </div>
+                    <div class="btn-group">
+                        <button class="btn-secondary" id="btn-open-product-modal">+ Add Product</button>
+                        <button class="btn-primary" id="btn-open-replenish-modal">📦 Replenish Stock</button>
+                    </div>
+                </div>
+
+                <div class="table-card glass-card">
+                    <table class="data-table" id="products-table">
+                        <thead>
+                            <tr>
+                                <th>SKU</th>
+                                <th>Product Name</th>
+                                <th>Price</th>
+                                <th>Physical Stock</th>
+                                <th>Reserved Stock</th>
+                                <th>Available (Lock)</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="products-tbody">
+                            <!-- Populated via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- TAB 4: KAFKA STREAM & OUTBOX -->
+            <section class="tab-pane" id="tab-kafka">
+                <div class="pane-header">
+                    <div>
+                        <h2>Transactional Outbox & Event Streaming</h2>
+                        <p>Guaranteed at-least-once event delivery, Kafka topics, and consumer lag</p>
+                    </div>
+                    <button class="btn-secondary" id="btn-refresh-outbox">🔄 Refresh Outbox</button>
+                </div>
+
+                <div class="grid-2-col">
+                    <div class="glass-card">
+                        <h3>Transactional Outbox Buffer</h3>
+                        <p>Events recorded atomically in PostgreSQL before Kafka dispatch</p>
+                        <div class="outbox-stream-list" id="outbox-list">
+                            <!-- Populated via JS -->
+                        </div>
+                    </div>
+
+                    <div class="glass-card">
+                        <h3>Active Kafka Listeners & Topics</h3>
+                        <p>Distributed subscribers processing domain events</p>
+                        <div class="kafka-listeners-list">
+                            <div class="listener-card">
+                                <div class="listener-header">
+                                    <span class="listener-name">OrderEventListener</span>
+                                    <span class="badge-status online">LISTENING</span>
+                                </div>
+                                <div class="listener-meta">Topics: <code>orders.created</code>, <code>orders.cancelled</code></div>
+                                <div class="listener-meta">Consumer Group: <code>nexusflow-order-listeners</code></div>
+                            </div>
+                            <div class="listener-card">
+                                <div class="listener-header">
+                                    <span class="listener-name">OrderSagaOrchestrator</span>
+                                    <span class="badge-status online">LISTENING</span>
+                                </div>
+                                <div class="listener-meta">Topics: <code>payments.processed</code></div>
+                                <div class="listener-meta">Consumer Group: <code>nexusflow-saga-orchestrator</code></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 5: PAYMENTS & SAGA -->
+            <section class="tab-pane" id="tab-payments">
+                <div class="pane-header">
+                    <div>
+                        <h2>Saga Payment Processing & Compensation</h2>
+                        <p>Simulate instant payment approvals or failure compensation with automatic stock rollback</p>
+                    </div>
+                    <button class="btn-primary" id="btn-open-payment-modal">💳 Simulate Payment</button>
+                </div>
+
+                <div class="saga-interactive-card glass-card">
+                    <h3>⚡ Test Saga Compensating Transactions Live</h3>
+                    <p>Select an existing order waiting for payment and test the automated rollback mechanism:</p>
+                    <div class="saga-action-box">
+                        <div class="form-group">
+                            <label>Waiting Payment Order ID</label>
+                            <select id="saga-order-select" class="form-input">
+                                <option value="">Select a waiting order...</option>
+                            </select>
+                        </div>
+                        <div class="btn-group">
+                            <button class="btn-success" id="btn-saga-approve">✅ Simulate Payment Approval</button>
+                            <button class="btn-danger" id="btn-saga-fail">⚠️ Simulate Payment Failure (Trigger Compensation)</button>
+                        </div>
+                    </div>
+                    <div class="saga-terminal" id="saga-terminal-output">
+                        <span class="term-line info">[Saga Terminal Ready] Awaiting payment execution event...</span>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- MODAL: CREATE ORDER -->
+    <div class="modal-backdrop" id="modal-order">
+        <div class="modal-window">
+            <div class="modal-header">
+                <h3>Create New Distributed Order</h3>
+                <button class="btn-close" onclick="closeModal('modal-order')">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Customer Document / Name</label>
+                    <input type="text" id="order-customer-name" class="form-input" value="Tony Stark (Stark Industries)">
+                </div>
+                <div class="form-group">
+                    <label>Select Product (SKU)</label>
+                    <select id="order-sku-select" class="form-input">
+                        <!-- Populated via JS -->
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Quantity</label>
+                    <input type="number" id="order-quantity" class="form-input" value="1" min="1" max="100">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closeModal('modal-order')">Cancel</button>
+                <button class="btn-primary" id="btn-submit-order">Place Order (Lock Stock)</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: ADD PRODUCT -->
+    <div class="modal-backdrop" id="modal-product">
+        <div class="modal-window">
+            <div class="modal-header">
+                <h3>Add New Product to Catalog</h3>
+                <button class="btn-close" onclick="closeModal('modal-product')">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>SKU</label>
+                    <input type="text" id="prod-sku" class="form-input" placeholder="e.g. GPU-RTX5090">
+                </div>
+                <div class="form-group">
+                    <label>Product Name</label>
+                    <input type="text" id="prod-name" class="form-input" placeholder="e.g. NVIDIA RTX 5090 24GB">
+                </div>
+                <div class="form-group">
+                    <label>Unit Price (BRL)</label>
+                    <input type="number" id="prod-price" class="form-input" placeholder="18999.00" step="0.01">
+                </div>
+                <div class="form-group">
+                    <label>Initial Stock Balance</label>
+                    <input type="number" id="prod-stock" class="form-input" value="10" min="0">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closeModal('modal-product')">Cancel</button>
+                <button class="btn-primary" id="btn-submit-product">Save Product</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/app.js"></script>
+</body>
+</html>
