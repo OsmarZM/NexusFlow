@@ -9,6 +9,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -23,7 +24,8 @@ public class PaymentController {
     private final PaymentService paymentService;
 
     @PostMapping({"", "/process"})
-    @Operation(summary = "Process or simulate payment for an order")
+    @PreAuthorize("hasAnyRole('ADMIN', 'FINANCE') or @securityService.isOrderOwner(#request.orderId(), authentication)")
+    @Operation(summary = "Process or simulate payment for an order (Finance, Admin or Order Owner)")
     public ResponseEntity<PaymentResponseDTO> processPayment(
             @Valid @RequestBody PaymentRequestDTO request,
             @RequestHeader(value = "X-Correlation-ID", required = false) String correlationId) {
@@ -33,6 +35,7 @@ public class PaymentController {
     }
 
     @GetMapping("/orders/{orderId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'FINANCE') or @securityService.isOrderOwner(#orderId, authentication)")
     @Operation(summary = "Get all payment records for an order")
     public ResponseEntity<List<PaymentResponseDTO>> getPaymentsForOrder(@PathVariable UUID orderId) {
         return ResponseEntity.ok(paymentService.getPaymentsForOrder(orderId));

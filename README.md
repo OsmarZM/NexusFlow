@@ -212,14 +212,14 @@ graph TD
 
 ## 🧪 Testes Automatizados de Produção
  
-### 1. Suíte de Testes Unitários & Integração com Banco Real (JUnit 5 + Testcontainers)
+### 1. Suíte Completa de Testes & Integração com Banco Real (JUnit 5 + Testcontainers + JaCoCo)
 ```powershell
-.\mvnw.cmd test
+.\mvnw.cmd clean verify
 ```
-*Total de **33 testes automatizados**, incluindo:*
+*Executa os testes unitários (Maven Surefire) e os testes de integração com containers reais (Maven Failsafe + Testcontainers + JaCoCo Quality Gate):*
 - **`InventoryPessimisticLockIntegrationTest`**: Validação real de alta concorrência disparando 30 threads e 30 transações simultâneas contra o **PostgreSQL 16** via Testcontainers (`SELECT ... FOR UPDATE`), comprovando taxa zero de race condition e zero overselling no nível de engine de banco de dados.
 - **`OrderSagaIntegrationTest`**: Validação E2E da Saga de pagamentos e compensação com liberação de estoque em caso de falha.
-- **Testes Unitários**: Cobertura de JWT, Caching Redis, Rate Limiter e Idempotência.
+- **Testes Unitários**: Cobertura de JWT, Caching Redis, Rate Limiter, Anti-Fraude de Pagamentos e Idempotência.
 
 ### 2. Teste E2E de Produção ao Vivo (13 Seções)
 Com a aplicação em execução, rode:

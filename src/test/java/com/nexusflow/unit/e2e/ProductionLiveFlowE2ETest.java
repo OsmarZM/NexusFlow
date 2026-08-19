@@ -249,7 +249,13 @@ class ProductionLiveFlowE2ETest {
         assertThat(createdOrder.totalAmount()).isEqualByComparingTo(BigDecimal.valueOf(18000.00));
 
         // 2. Processar Pagamento Aprovado
-        when(orderRepository.findById(orderId)).thenReturn(Optional.of(Order.builder().id(orderId).status(OrderStatus.WAITING_PAYMENT).items(Collections.emptyList()).build()));
+        when(orderRepository.findById(orderId)).thenReturn(Optional.of(Order.builder()
+                .id(orderId)
+                .customer(customer)
+                .totalAmount(BigDecimal.valueOf(18000.00))
+                .status(OrderStatus.WAITING_PAYMENT)
+                .items(Collections.emptyList())
+                .build()));
         when(paymentRepository.save(any(Payment.class))).thenAnswer(inv -> {
             Payment p = inv.getArgument(0);
             p.setId(UUID.randomUUID());
@@ -270,8 +276,15 @@ class ProductionLiveFlowE2ETest {
     void testSection5_SagaCompensatingTransaction() {
         UUID customerId = UUID.randomUUID();
         UUID orderId = UUID.randomUUID();
+        Customer customer = Customer.builder().id(customerId).name("Tony Stark").email("tony@stark.com").build();
 
-        when(orderRepository.findById(orderId)).thenReturn(Optional.of(Order.builder().id(orderId).status(OrderStatus.WAITING_PAYMENT).items(Collections.emptyList()).build()));
+        when(orderRepository.findById(orderId)).thenReturn(Optional.of(Order.builder()
+                .id(orderId)
+                .customer(customer)
+                .totalAmount(BigDecimal.valueOf(5000.00))
+                .status(OrderStatus.WAITING_PAYMENT)
+                .items(Collections.emptyList())
+                .build()));
         when(paymentRepository.save(any(Payment.class))).thenAnswer(inv -> {
             Payment p = inv.getArgument(0);
             p.setId(UUID.randomUUID());

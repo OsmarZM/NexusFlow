@@ -12,6 +12,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -25,6 +26,7 @@ public class OrderController {
     private final OrderService orderService;
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('CUSTOMER', 'ADMIN')")
     @Operation(summary = "Create a new order with automatic inventory reservation")
     public ResponseEntity<OrderResponseDTO> createOrder(@Valid @RequestBody CreateOrderRequestDTO request) {
         OrderResponseDTO response = orderService.createOrder(request);
@@ -32,19 +34,22 @@ public class OrderController {
     }
 
     @GetMapping("/{id}")
-    @Operation(summary = "Get order details by ID")
+    @PreAuthorize("hasAnyRole('ADMIN', 'WAREHOUSE_OPERATOR', 'FINANCE') or @securityService.isOrderOwner(#id, authentication)")
+    @Operation(summary = "Get order details by ID (Admin, Operator or Order Owner)")
     public ResponseEntity<OrderResponseDTO> getOrderById(@PathVariable UUID id) {
         return ResponseEntity.ok(orderService.getOrderById(id));
     }
 
     @GetMapping
-    @Operation(summary = "List paginated orders")
+    @PreAuthorize("hasAnyRole('ADMIN', 'WAREHOUSE_OPERATOR', 'FINANCE')")
+    @Operation(summary = "List all paginated orders (Restricted to internal roles)")
     public ResponseEntity<Page<OrderResponseDTO>> listOrders(@PageableDefault(size = 20) Pageable pageable) {
         return ResponseEntity.ok(orderService.listOrders(pageable));
     }
 
     @GetMapping("/customer/{customerId}")
-    @Operation(summary = "List orders by customer ID")
+    @PreAuthorize("hasRole('ADMIN') or @securityService.isCustomerOwner(#customerId, authentication)")
+    @Operation(summary = "List orders by customer ID (Admin or Customer Owner)")
     public ResponseEntity<Page<OrderResponseDTO>> listOrdersByCustomer(
             @PathVariable UUID customerId,
             @PageableDefault(size = 20) Pageable pageable) {
@@ -52,7 +57,8 @@ public class OrderController {
     }
 
     @PostMapping("/{id}/cancel")
-    @Operation(summary = "Cancel an order and release reserved stock")
+    @PreAuthorize("hasRole('ADMIN') or @securityService.isOrderOwner(#id, authentication)")
+    @Operation(summary = "Cancel an order and release reserved stock (Admin or Order Owner)")
     public ResponseEntity<OrderResponseDTO> cancelOrder(
             @PathVariable UUID id,
             @RequestParam(defaultValue = "Customer requested cancellation") String reason) {
@@ -60,7 +66,8 @@ public class OrderController {
     }
 
     @PostMapping("/{id}/pay")
-    @Operation(summary = "Simulate payment confirmation and deduct physical stock")
+    @PreAuthorize("hasAnyRole('ADMIN', 'FINANCE')")
+    @Operation(summary = "Confirm payment and deduct physical stock (Finance/Admin only)")
     public ResponseEntity<OrderResponseDTO> markAsPaid(@PathVariable UUID id) {
         return ResponseEntity.ok(orderService.markAsPaid(id));
     }
