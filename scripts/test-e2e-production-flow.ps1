@@ -2,7 +2,7 @@
 # NexusFlow — Automated Production-Grade E2E Test Suite
 # ==============================================================================
 param(
-    [string]$BaseUrl = "http://localhost:8080"
+    [string]$BaseUrl = "http://localhost:8085"
 )
 
 $ErrorActionPreference = "Continue"

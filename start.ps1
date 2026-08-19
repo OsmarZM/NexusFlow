@@ -92,9 +92,9 @@ Write-Host ""
 Write-Host "[4/4] Inicializando aplicacao Spring Boot (NexusFlow)..." -ForegroundColor Green
 Write-Host "=================================================================" -ForegroundColor Cyan
 Write-Host " Endpoints disponiveis apos inicializacao:" -ForegroundColor Cyan
-Write-Host "   - Swagger UI:   http://localhost:8080/swagger-ui.html" -ForegroundColor DarkCyan
-Write-Host "   - Actuator:     http://localhost:8080/actuator/health" -ForegroundColor DarkCyan
-Write-Host "   - Prometheus:   http://localhost:8080/actuator/prometheus" -ForegroundColor DarkCyan
+Write-Host "   - Swagger UI:   http://localhost:8085/swagger-ui.html" -ForegroundColor DarkCyan
+Write-Host "   - Actuator:     http://localhost:8085/actuator/health" -ForegroundColor DarkCyan
+Write-Host "   - Prometheus:   http://localhost:8085/actuator/prometheus" -ForegroundColor DarkCyan
 Write-Host "   - Grafana:      http://localhost:3000 (admin/admin)" -ForegroundColor DarkCyan
 Write-Host "   - pgAdmin:      http://localhost:5050 (admin@nexusflow.com/admin)" -ForegroundColor DarkCyan
 Write-Host "=================================================================" -ForegroundColor Cyan
