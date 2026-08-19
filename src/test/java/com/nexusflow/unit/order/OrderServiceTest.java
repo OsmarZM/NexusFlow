@@ -13,6 +13,7 @@ import com.nexusflow.order.application.dto.OrderResponseDTO;
 import com.nexusflow.order.domain.Order;
 import com.nexusflow.order.domain.OrderRepository;
 import com.nexusflow.order.domain.OrderStatus;
+import com.nexusflow.outbox.application.OutboxService;
 import com.nexusflow.product.domain.Product;
 import com.nexusflow.product.domain.ProductRepository;
 import com.nexusflow.product.domain.ProductStatus;
@@ -25,7 +26,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
-import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -33,6 +33,7 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -51,7 +52,7 @@ class OrderServiceTest {
     private InventoryService inventoryService;
 
     @Mock
-    private com.nexusflow.messaging.producer.OrderEventProducer orderEventProducer;
+    private OutboxService outboxService;
 
     @Mock
     private com.nexusflow.shared.metrics.BusinessMetricsService businessMetricsService;
@@ -60,7 +61,7 @@ class OrderServiceTest {
     private OrderService orderService;
 
     @Test
-    @DisplayName("Should create order and reserve stock for all items")
+    @DisplayName("Should create order, reserve stock and write event to Outbox")
     void shouldCreateOrderAndReserveStock() {
         UUID customerId = UUID.randomUUID();
         Customer customer = Customer.builder()
@@ -98,6 +99,7 @@ class OrderServiceTest {
         assertThat(response.items()).hasSize(1);
         verify(inventoryService, times(1)).reserveStock(any(), eq(true));
         verify(orderRepository, times(1)).save(any(Order.class));
+        verify(outboxService, times(1)).saveEvent(eq("ORDER"), any(), any(), any());
     }
 
     @Test
@@ -123,5 +125,6 @@ class OrderServiceTest {
                 .hasMessageContaining("Customer account is not active");
 
         verify(orderRepository, never()).save(any(Order.class));
+        verify(outboxService, never()).saveEvent(any(), any(), any(), any());
     }
 }

@@ -116,7 +116,9 @@ class ProductionLiveFlowE2ETest {
         authService = new AuthService(userRepository, passwordEncoder, jwtService, authenticationManager);
         inventoryService = new InventoryService(inventoryRepository, reservationRepository);
         productService = new ProductService(productRepository, inventoryService);
-        orderService = new OrderService(orderRepository, customerRepository, productRepository, inventoryService, orderEventProducer, businessMetricsService);
+        orderService = new OrderService(orderRepository, customerRepository, productRepository, inventoryService, outboxService, businessMetricsService);
+        ReflectionTestUtils.setField(orderService, "orderCreatedTopic", "orders.created");
+        ReflectionTestUtils.setField(orderService, "orderCancelledTopic", "orders.cancelled");
         paymentService = new PaymentService(paymentRepository, orderRepository, outboxService);
         ReflectionTestUtils.setField(paymentService, "paymentProcessedTopic", "payments.processed");
 

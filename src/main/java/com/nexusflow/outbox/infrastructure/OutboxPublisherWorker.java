@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @Component
 @RequiredArgsConstructor
@@ -26,17 +27,18 @@ public class OutboxPublisherWorker {
     @Scheduled(fixedDelay = 2000)
     @Transactional
     public void processOutboxEvents() {
-        List<OutboxEvent> pendingEvents = outboxRepository.findByStatusOrderByCreatedAtAsc(
-                OutboxStatus.PENDING, PageRequest.of(0, 50)
+        List<OutboxEvent> eligibleEvents = outboxRepository.findByStatusInOrderByCreatedAtAsc(
+                List.of(OutboxStatus.PENDING, OutboxStatus.FAILED),
+                PageRequest.of(0, 50)
         );
 
-        if (pendingEvents.isEmpty()) {
+        if (eligibleEvents.isEmpty()) {
             return;
         }
 
-        log.debug("Found {} pending outbox events to publish to Kafka", pendingEvents.size());
+        log.debug("Found {} eligible outbox events to publish to Kafka", eligibleEvents.size());
 
-        for (OutboxEvent event : pendingEvents) {
+        for (OutboxEvent event : eligibleEvents) {
             try {
                 ProducerRecord<String, Object> record = new ProducerRecord<>(
                         event.getTopic(),
@@ -47,19 +49,16 @@ public class OutboxPublisherWorker {
                 record.headers().add("eventId", event.getId().toString().getBytes(StandardCharsets.UTF_8));
                 record.headers().add("eventType", event.getEventType().getBytes(StandardCharsets.UTF_8));
 
-                kafkaTemplate.send(record).whenComplete((result, ex) -> {
-                    if (ex != null) {
-                        log.error("Failed to publish outbox event ID {}: {}", event.getId(), ex.getMessage());
-                        event.markAsFailed(ex.getMessage());
-                    } else {
-                        event.markAsPublished();
-                        outboxRepository.save(event);
-                        log.info("Outbox event ID {} successfully published to Kafka topic {}", event.getId(), event.getTopic());
-                    }
-                });
+                // Synchronous send with timeout guarantees Kafka broker ACK before committing status
+                kafkaTemplate.send(record).get(5, TimeUnit.SECONDS);
+
+                event.markAsPublished();
+                outboxRepository.save(event);
+                log.info("Outbox event ID {} successfully published to Kafka topic {}", event.getId(), event.getTopic());
             } catch (Exception e) {
-                log.error("Exception occurred publishing outbox event ID {}: {}", event.getId(), e.getMessage(), e);
-                event.markAsFailed(e.getMessage());
+                String errorMsg = e.getCause() != null ? e.getCause().getMessage() : e.getMessage();
+                log.error("Failed to publish outbox event ID {}: {}", event.getId(), errorMsg);
+                event.markAsFailed(errorMsg);
                 outboxRepository.save(event);
             }
         }

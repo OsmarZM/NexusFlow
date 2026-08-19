@@ -14,4 +14,7 @@ public interface OutboxEventRepository extends JpaRepository<OutboxEvent, UUID> 
 
     @Query("SELECT o FROM OutboxEvent o WHERE o.status = :status ORDER BY o.createdAt ASC")
     List<OutboxEvent> findByStatusOrderByCreatedAtAsc(@Param("status") OutboxStatus status, Pageable pageable);
+
+    @Query("SELECT o FROM OutboxEvent o WHERE o.status IN (:statuses) ORDER BY o.createdAt ASC")
+    List<OutboxEvent> findByStatusInOrderByCreatedAtAsc(@Param("statuses") List<OutboxStatus> statuses, Pageable pageable);
 }

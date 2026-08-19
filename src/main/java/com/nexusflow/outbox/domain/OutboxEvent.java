@@ -57,6 +57,10 @@ public class OutboxEvent {
     @Column(name = "published_at")
     private OffsetDateTime publishedAt;
 
+    public void markAsInProgress() {
+        this.status = OutboxStatus.IN_PROGRESS;
+    }
+
     public void markAsPublished() {
         this.status = OutboxStatus.PUBLISHED;
         this.publishedAt = OffsetDateTime.now();
@@ -67,6 +71,8 @@ public class OutboxEvent {
         this.retryCount++;
         this.errorMessage = error;
         if (this.retryCount >= 5) {
+            this.status = OutboxStatus.DEAD;
+        } else {
             this.status = OutboxStatus.FAILED;
         }
     }

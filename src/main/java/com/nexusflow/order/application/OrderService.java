@@ -12,6 +12,7 @@ import com.nexusflow.order.domain.Order;
 import com.nexusflow.order.domain.OrderItem;
 import com.nexusflow.order.domain.OrderRepository;
 import com.nexusflow.order.domain.OrderStatus;
+import com.nexusflow.outbox.application.OutboxService;
 import com.nexusflow.product.domain.Product;
 import com.nexusflow.product.domain.ProductRepository;
 import com.nexusflow.product.domain.ProductStatus;
@@ -19,6 +20,7 @@ import com.nexusflow.shared.exception.BusinessException;
 import com.nexusflow.shared.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -36,8 +38,14 @@ public class OrderService {
     private final CustomerRepository customerRepository;
     private final ProductRepository productRepository;
     private final InventoryService inventoryService;
-    private final com.nexusflow.messaging.producer.OrderEventProducer orderEventProducer;
+    private final OutboxService outboxService;
     private final com.nexusflow.shared.metrics.BusinessMetricsService businessMetricsService;
+
+    @Value("${nexusflow.kafka.topics.order-created:orders.created}")
+    private String orderCreatedTopic;
+
+    @Value("${nexusflow.kafka.topics.order-cancelled:orders.cancelled}")
+    private String orderCancelledTopic;
 
     @Transactional
     public OrderResponseDTO createOrder(CreateOrderRequestDTO request) {
@@ -88,7 +96,7 @@ public class OrderService {
         Order savedOrder = orderRepository.save(order);
         log.info("Order successfully created with ID: {} and total: {}", savedOrder.getId(), savedOrder.getTotalAmount());
 
-        // Publish OrderCreatedEvent to Kafka
+        // Emit domain event via Transactional Outbox (Guaranteed consistency with DB Commit)
         List<com.nexusflow.messaging.event.OrderCreatedEvent.OrderItemPayload> eventItems = savedOrder.getItems().stream()
                 .map(item -> new com.nexusflow.messaging.event.OrderCreatedEvent.OrderItemPayload(
                         item.getProduct().getId(),
@@ -108,7 +116,8 @@ public class OrderService {
                 eventItems,
                 UUID.randomUUID().toString()
         );
-        orderEventProducer.publishOrderCreated(event);
+
+        outboxService.saveEvent("ORDER", savedOrder.getId(), orderCreatedTopic, event);
         businessMetricsService.incrementOrdersCreated();
 
         return OrderResponseDTO.fromEntity(savedOrder);
@@ -156,16 +165,16 @@ public class OrderService {
         order.setStatus(OrderStatus.CANCELLED);
         Order updated = orderRepository.save(order);
 
-        // Publish OrderCancelledEvent
+        // Emit domain event via Transactional Outbox
         com.nexusflow.messaging.event.OrderCancelledEvent cancelEvent = com.nexusflow.messaging.event.OrderCancelledEvent.create(
                 updated.getId(),
                 reason,
                 UUID.randomUUID().toString()
         );
-        orderEventProducer.publishOrderCancelled(cancelEvent);
+        outboxService.saveEvent("ORDER", updated.getId(), orderCancelledTopic, cancelEvent);
         businessMetricsService.incrementOrdersCancelled();
 
-        log.info("Order ID: {} cancelled and reserved stock released.", id);
+        log.info("Order ID: {} cancelled and reserved stock released via Transactional Outbox.", id);
         return OrderResponseDTO.fromEntity(updated);
     }
 

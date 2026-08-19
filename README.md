@@ -4,7 +4,7 @@
 
 ![NexusFlow Banner](docs/assets/nexusflow_banner.jpg)
 
-**Plataforma corporativa distribuída para processamento de pedidos em tempo real, controle atômico de estoque, pagamentos assíncronos e orquestração de microsserviços.**
+**Modular Monolith event-driven corporativo para processamento de pedidos em alta concorrência, controle atômico de estoque (Pessimistic Lock), consistência garantida via Transactional Outbox e arquitetura preparada para extração progressiva em microsserviços.**
 
 [![Java](https://img.shields.io/badge/Java-17-orange.svg?style=for-the-badge&logo=openjdk)](https://openjdk.org/)
 [![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.3.5-brightgreen.svg?style=for-the-badge&logo=springboot)](https://spring.io/projects/spring-boot)
@@ -14,6 +14,7 @@
 [![Kubernetes](https://img.shields.io/badge/Kubernetes-Ready-326CE5.svg?style=for-the-badge&logo=kubernetes)](https://kubernetes.io/)
 [![Prometheus](https://img.shields.io/badge/Prometheus-Monitoring-E6522C.svg?style=for-the-badge&logo=prometheus)](https://prometheus.io/)
 [![Grafana](https://img.shields.io/badge/Grafana-Dashboards-F46800.svg?style=for-the-badge&logo=grafana)](https://grafana.com/)
+[![JaCoCo](https://img.shields.io/badge/JaCoCo-Coverage_Ready-blueviolet.svg?style=for-the-badge)](https://www.jacoco.org/)
 
 </div>
 
@@ -210,12 +211,15 @@ graph TD
 ---
 
 ## 🧪 Testes Automatizados de Produção
-
-### 1. Suíte de Testes Unitários & Concorrência (JUnit 5 + Mockito)
+ 
+### 1. Suíte de Testes Unitários & Integração com Banco Real (JUnit 5 + Testcontainers)
 ```powershell
 .\mvnw.cmd test
 ```
-*Total de **32 testes automatizados** cobrindo concorrência com CountDownLatch, Saga Orchestrator, Outbox, Caching e JWT.*
+*Total de **33 testes automatizados**, incluindo:*
+- **`InventoryPessimisticLockIntegrationTest`**: Validação real de alta concorrência disparando 30 threads e 30 transações simultâneas contra o **PostgreSQL 16** via Testcontainers (`SELECT ... FOR UPDATE`), comprovando taxa zero de race condition e zero overselling no nível de engine de banco de dados.
+- **`OrderSagaIntegrationTest`**: Validação E2E da Saga de pagamentos e compensação com liberação de estoque em caso de falha.
+- **Testes Unitários**: Cobertura de JWT, Caching Redis, Rate Limiter e Idempotência.
 
 ### 2. Teste E2E de Produção ao Vivo (13 Seções)
 Com a aplicação em execução, rode:

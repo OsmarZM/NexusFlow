@@ -34,3 +34,9 @@ target/
 *.log
 scratch/
 .system_generated/
+
+### Secrets & Environment Configs ###
+.env
+.env.*
+k8s/secret.yaml
+!k8s/secret.example.yaml

@@ -66,6 +66,7 @@ spring:
 
 nexusflow:
   security:
+    admin-password: ${NEXUSFLOW_ADMIN_PASSWORD:Admin@123456}
     jwt:
       secret-key: ${JWT_SECRET:404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970}
       expiration-minutes: ${JWT_EXPIRATION_MINUTES:120}

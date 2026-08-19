@@ -11,4 +11,5 @@ import java.util.UUID;
 public interface InventoryReservationRepository extends JpaRepository<InventoryReservation, UUID> {
     List<InventoryReservation> findByOrderId(UUID orderId);
     Optional<InventoryReservation> findByOrderIdAndSku(UUID orderId, String sku);
+    long countBySkuAndStatus(String sku, ReservationStatus status);
 }

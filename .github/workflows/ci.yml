@@ -29,8 +29,7 @@ jobs:
         run: ./mvnw clean verify -B
 
       - name: Build Docker Image
-        run: |
-          docker build -t nexusflow-api:latest -f Dockerfile . || echo "Docker build ready"
+        run: docker build -t nexusflow-api:latest -f Dockerfile .
 
       - name: Publish Test Report
         if: always()
@@ -38,3 +37,10 @@ jobs:
         with:
           name: surefire-reports
           path: target/surefire-reports/
+
+      - name: Publish JaCoCo Coverage Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: jacoco-coverage-report
+          path: target/site/jacoco/
