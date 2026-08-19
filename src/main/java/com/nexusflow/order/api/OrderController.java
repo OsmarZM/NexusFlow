@@ -26,7 +26,7 @@ public class OrderController {
     private final OrderService orderService;
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('CUSTOMER', 'ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or @securityService.isCustomerOwner(#request.customerId(), authentication)")
     @Operation(summary = "Create a new order with automatic inventory reservation")
     public ResponseEntity<OrderResponseDTO> createOrder(@Valid @RequestBody CreateOrderRequestDTO request) {
         OrderResponseDTO response = orderService.createOrder(request);

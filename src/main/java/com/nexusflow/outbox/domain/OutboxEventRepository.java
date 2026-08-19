@@ -22,6 +22,6 @@ public interface OutboxEventRepository extends JpaRepository<OutboxEvent, UUID> 
     @Query(value = "SELECT * FROM outbox_events WHERE status IN ('PENDING', 'FAILED') ORDER BY created_at ASC LIMIT :limit FOR UPDATE SKIP LOCKED", nativeQuery = true)
     List<OutboxEvent> findPendingEventsForProcessingWithLock(@Param("limit") int limit);
 
-    @Query("SELECT o FROM OutboxEvent o WHERE o.status = :status AND o.createdAt < :threshold")
+    @Query("SELECT o FROM OutboxEvent o WHERE o.status = :status AND o.claimedAt < :threshold")
     List<OutboxEvent> findStuckEvents(@Param("status") OutboxStatus status, @Param("threshold") OffsetDateTime threshold);
 }

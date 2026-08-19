@@ -54,11 +54,15 @@ public class OutboxEvent {
     @Column(name = "created_at", nullable = false, updatable = false)
     private OffsetDateTime createdAt;
 
+    @Column(name = "claimed_at")
+    private OffsetDateTime claimedAt;
+
     @Column(name = "published_at")
     private OffsetDateTime publishedAt;
 
     public void markAsInProgress() {
         this.status = OutboxStatus.IN_PROGRESS;
+        this.claimedAt = OffsetDateTime.now();
     }
 
     public void markAsPublished() {

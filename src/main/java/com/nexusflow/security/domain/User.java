@@ -44,6 +44,9 @@ public class User implements UserDetails {
     @Builder.Default
     private boolean enabled = true;
 
+    @Column(name = "customer_id")
+    private UUID customerId;
+
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"))
     @Enumerated(EnumType.STRING)

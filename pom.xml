@@ -213,7 +213,6 @@
                         <exclude>**/dto/**</exclude>
                         <exclude>**/config/**</exclude>
                         <exclude>**/*Application.*</exclude>
-                        <exclude>**/domain/*</exclude>
                     </excludes>
                 </configuration>
                 <executions>

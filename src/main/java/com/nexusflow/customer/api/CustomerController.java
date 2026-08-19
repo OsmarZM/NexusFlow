@@ -12,6 +12,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -25,26 +26,30 @@ public class CustomerController {
     private final CustomerService customerService;
 
     @PostMapping
-    @Operation(summary = "Register a new customer")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Register a new customer (Admin only)")
     public ResponseEntity<CustomerResponseDTO> createCustomer(@Valid @RequestBody CustomerRequestDTO request) {
         CustomerResponseDTO response = customerService.createCustomer(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @GetMapping("/{id}")
-    @Operation(summary = "Get customer details by ID")
+    @PreAuthorize("hasRole('ADMIN') or @securityService.isCustomerOwner(#id, authentication)")
+    @Operation(summary = "Get customer details by ID (Admin or Customer Owner)")
     public ResponseEntity<CustomerResponseDTO> getCustomerById(@PathVariable UUID id) {
         return ResponseEntity.ok(customerService.getCustomerById(id));
     }
 
     @GetMapping
-    @Operation(summary = "List paginated customers")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "List paginated customers (Admin only)")
     public ResponseEntity<Page<CustomerResponseDTO>> listCustomers(@PageableDefault(size = 20) Pageable pageable) {
         return ResponseEntity.ok(customerService.listCustomers(pageable));
     }
 
     @PutMapping("/{id}")
-    @Operation(summary = "Update an existing customer")
+    @PreAuthorize("hasRole('ADMIN') or @securityService.isCustomerOwner(#id, authentication)")
+    @Operation(summary = "Update an existing customer (Admin or Customer Owner)")
     public ResponseEntity<CustomerResponseDTO> updateCustomer(
             @PathVariable UUID id,
             @Valid @RequestBody CustomerRequestDTO request) {
@@ -52,7 +57,8 @@ public class CustomerController {
     }
 
     @DeleteMapping("/{id}")
-    @Operation(summary = "Deactivate a customer")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Deactivate a customer (Admin only)")
     public ResponseEntity<Void> deleteCustomer(@PathVariable UUID id) {
         customerService.deleteCustomer(id);
         return ResponseEntity.noContent().build();

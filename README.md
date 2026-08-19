@@ -118,31 +118,38 @@ sequenceDiagram
     activate API
     API->>DB: Iniciar Transação ACID
     API->>DB: SELECT * FROM inventories WHERE sku = ? FOR UPDATE (Pessimistic Lock)
-    Note over API,DB: Garante que NENHUM outro thread altere o saldo
+    Note over API,DB: Garante que NENHUM outro thread altere o saldo concorrente
     API->>DB: Deduz quantidade reservada & Grava pedido (WAITING_PAYMENT)
     API->>DB: INSERT INTO outbox_events (ORDER_CREATED, PENDING)
-    API->>DB: Commit Transação
+    API->>DB: Commit Transação ACID
     API-->>Client: 201 Created (Order ID, Status: WAITING_PAYMENT)
     deactivate API
 
-    loop A cada 1 segundo (Background Worker)
-        Outbox->>DB: SELECT * FROM outbox_events WHERE status = 'PENDING'
+    loop A cada 2s (Outbox Publisher Worker com SKIP LOCKED)
+        Outbox->>DB: SELECT * FROM outbox_events WHERE status IN ('PENDING', 'FAILED') FOR UPDATE SKIP LOCKED
+        Outbox->>DB: UPDATE outbox_events SET status = 'IN_PROGRESS', claimed_at = now()
         Outbox->>Kafka: Publicar em orders.created (Key: OrderId)
         Outbox->>DB: UPDATE outbox_events SET status = 'PUBLISHED'
     end
 
-    Kafka->>Saga: Recebe Evento ORDER_CREATED
+    Note over Client,API: 💳 Gateway de Pagamento / Checkout Simulation
+    Client->>API: POST /api/v1/payments/process (OrderId, Validated Total)
+    activate API
+    API->>DB: Valida total e cliente real do pedido & Grava Payment (APPROVED ou REJECTED)
+    API->>DB: INSERT INTO outbox_events (PAYMENT_PROCESSED, PENDING)
+    API->>DB: Commit Transação ACID
+    API-->>Client: 201 Created (Payment Status)
+    deactivate API
+
+    Outbox->>Kafka: Publicar em payments.processed (Key: OrderId)
+
+    Kafka->>Saga: OrderSagaOrchestrator consome PaymentProcessedEvent (Idempotent Consumer)
     activate Saga
-    Saga->>API: Processar Pagamento (POST /api/v1/payments)
     
     alt Pagamento APROVADO
-        API->>Kafka: Publica PAYMENT_APPROVED
-        Kafka->>Saga: Recebe PAYMENT_APPROVED
-        Saga->>DB: Atualiza Pedido para CONFIRMED / PAID
+        Saga->>DB: Atualiza Pedido para PAID
         Saga->>Inventory: Confirma baixa física definitiva no estoque
-    else Pagamento REJEITADO (Ex: Falha de Crédito)
-        API->>Kafka: Publica PAYMENT_FAILED
-        Kafka->>Saga: Recebe PAYMENT_FAILED
+    else Pagamento REJEITADO (Ex: Falha de Limite de Crédito)
         Note over Saga,Inventory: ⚠️ DISPARA TRANSAÇÃO COMPENSATÓRIA
         Saga->>DB: Atualiza Pedido para CANCELLED
         Saga->>Inventory: Libera reserva e devolve unidades ao estoque disponível
