@@ -3,12 +3,48 @@
 # ==============================================================================
 $ErrorActionPreference = "Continue"
 
+$Port = 8085
+
 Write-Host "=================================================================" -ForegroundColor Cyan
 Write-Host " NEXUSFLOW PLATFORM - INICIALIZACAO AUTOMATICA COMPLETA" -ForegroundColor Cyan
 Write-Host "=================================================================" -ForegroundColor Cyan
 Write-Host ""
 
+# 0. ROTINA DE LIMPEZA: LIBERAR A PORTA 8085 SE HOUVER PROCESSO ANTERIOR PRESO
+Write-Host "[0/4] Verificando se a porta $Port esta livre..." -ForegroundColor Yellow
+
+try {
+    $occupied = Get-NetTCPConnection -LocalPort $Port -ErrorAction SilentlyContinue | Where-Object { $_.State -eq "Listen" }
+    if ($occupied) {
+        foreach ($conn in $occupied) {
+            $pidToKill = $conn.OwningProcess
+            if ($pidToKill -gt 0) {
+                Write-Host "  [!] Encontrado processo anterior (PID: $pidToKill) na porta $Port. Finalizando..." -ForegroundColor Magenta
+                Stop-Process -Id $pidToKill -Force -ErrorAction SilentlyContinue
+                Start-Sleep -Seconds 1
+            }
+        }
+        Write-Host "  [OK] Porta $Port liberada com sucesso!" -ForegroundColor Green
+    } else {
+        Write-Host "  [OK] Porta $Port livre para uso." -ForegroundColor Green
+    }
+} catch {
+    # Fallback usando netstat
+    $netstatOutput = netstat -ano | findstr ":$Port"
+    if ($netstatOutput) {
+        $lines = $netstatOutput -split "`n"
+        foreach ($line in $lines) {
+            if ($line -match "LISTENING\s+(\d+)") {
+                $pidToKill = $matches[1]
+                Write-Host "  [!] Finalizando processo PID $pidToKill na porta $Port..." -ForegroundColor Magenta
+                Stop-Process -Id $pidToKill -Force -ErrorAction SilentlyContinue
+            }
+        }
+    }
+}
+
 # 1. VERIFICAR / INICIAR DOCKER DESKTOP
+Write-Host ""
 Write-Host "[1/4] Verificando status do Docker..." -ForegroundColor Yellow
 
 $dockerReady = $false
@@ -92,9 +128,9 @@ Write-Host ""
 Write-Host "[4/4] Inicializando aplicacao Spring Boot (NexusFlow)..." -ForegroundColor Green
 Write-Host "=================================================================" -ForegroundColor Cyan
 Write-Host " Endpoints disponiveis apos inicializacao:" -ForegroundColor Cyan
-Write-Host "   - Swagger UI:   http://localhost:8085/swagger-ui.html" -ForegroundColor DarkCyan
-Write-Host "   - Actuator:     http://localhost:8085/actuator/health" -ForegroundColor DarkCyan
-Write-Host "   - Prometheus:   http://localhost:8085/actuator/prometheus" -ForegroundColor DarkCyan
+Write-Host "   - Swagger UI:   http://localhost:$Port/swagger-ui.html" -ForegroundColor DarkCyan
+Write-Host "   - Actuator:     http://localhost:$Port/actuator/health" -ForegroundColor DarkCyan
+Write-Host "   - Prometheus:   http://localhost:$Port/actuator/prometheus" -ForegroundColor DarkCyan
 Write-Host "   - Grafana:      http://localhost:3000 (admin/admin)" -ForegroundColor DarkCyan
 Write-Host "   - pgAdmin:      http://localhost:5050 (admin@nexusflow.com/admin)" -ForegroundColor DarkCyan
 Write-Host "=================================================================" -ForegroundColor Cyan

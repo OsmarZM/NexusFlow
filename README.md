@@ -159,12 +159,21 @@ Interactive API documentation is available via **Swagger UI** at `http://localho
 
 ## 🚀 Como Executar o Projeto com 1 Único Comando
 
-Criamos um script que automatiza tudo (abre o Docker Desktop se estiver fechado, sobe o PostgreSQL 16, Redis 7, Kafka, Prometheus, Grafana, aguarda o banco ficar pronto e inicia a aplicação Spring Boot):
-
+### 🟢 Iniciar Tudo (Docker + Postgres + Redis + Kafka + Spring Boot):
 ```powershell
 .\start.ps1
 ```
 *Ou simplesmente dê dois cliques no arquivo `start.bat`.*
+> **Gerenciamento Inteligente de Processos:** O script verifica e encerra automaticamente qualquer processo preso na porta `8085` antes de iniciar, garantindo que o sistema sempre suba na mesma porta oficial sem conflito.
+
+---
+
+### 🛑 Encerrar Tudo com Segurança:
+```powershell
+.\stop.ps1
+```
+*Ou simplesmente dê dois cliques no arquivo `stop.bat`.*
+> Encerra a aplicação Spring Boot e pausa os containers Docker de forma limpa.
 
 ---
 
