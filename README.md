@@ -197,9 +197,9 @@ Serviços iniciados:
 ```
 
 ### 4. Explore Endpoints
-- **Swagger UI:** [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html)
-- **Actuator Health:** [http://localhost:8080/actuator/health](http://localhost:8080/actuator/health)
-- **OpenAPI JSON Spec:** [http://localhost:8080/v3/api-docs](http://localhost:8080/v3/api-docs)
+- **Swagger UI:** [http://localhost:8085/swagger-ui.html](http://localhost:8085/swagger-ui.html)
+- **Actuator Health:** [http://localhost:8085/actuator/health](http://localhost:8085/actuator/health)
+- **OpenAPI JSON Spec:** [http://localhost:8085/v3/api-docs](http://localhost:8085/v3/api-docs)
 
 ---
 
