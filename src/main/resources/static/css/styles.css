@@ -432,12 +432,45 @@ body.dark-theme {
     border-radius: var(--radius-sm);
     padding: 16px;
     border: 1px solid rgba(255, 255, 255, 0.04);
+    height: 260px;
+    display: flex;
+    flex-direction: column;
+}
+
+.chart-wrapper {
+    position: relative;
+    flex: 1;
+    min-height: 0;
+    width: 100%;
+    height: 190px;
+}
+
+.chart-container {
+    position: relative;
+    width: 100%;
+    height: 180px;
+    min-height: 180px;
+}
+
+.donut-col {
+    position: relative;
+    width: 130px;
+    height: 130px;
+    min-width: 130px;
+    min-height: 130px;
+    flex-shrink: 0;
+}
+
+canvas {
+    max-width: 100% !important;
+    max-height: 100% !important;
 }
 
 .flow-map-overlay {
     display: flex;
     justify-content: space-around;
     margin-bottom: 12px;
+    flex-shrink: 0;
 }
 
 .flow-node {

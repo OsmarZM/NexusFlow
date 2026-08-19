@@ -128,6 +128,7 @@ Write-Host ""
 Write-Host "[4/4] Inicializando aplicacao Spring Boot (NexusFlow)..." -ForegroundColor Green
 Write-Host "=================================================================" -ForegroundColor Cyan
 Write-Host " Endpoints disponiveis apos inicializacao:" -ForegroundColor Cyan
+Write-Host "   - Painel Web:   http://localhost:$Port" -ForegroundColor DarkCyan
 Write-Host "   - Swagger UI:   http://localhost:$Port/swagger-ui.html" -ForegroundColor DarkCyan
 Write-Host "   - Actuator:     http://localhost:$Port/actuator/health" -ForegroundColor DarkCyan
 Write-Host "   - Prometheus:   http://localhost:$Port/actuator/prometheus" -ForegroundColor DarkCyan

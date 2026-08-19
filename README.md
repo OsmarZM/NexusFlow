@@ -24,6 +24,8 @@
 <div align="center">
 
 ### 🖥️ Painel Operacional em Tempo Real
+**Link Local:** [NexusFlow — Enterprise Distributed Order & Inventory Engine](http://localhost:8085/index.html)
+
 ![NexusFlow Dashboard UI](docs/assets/nexusflow_dashboard.jpg)
 
 ### 📊 Observabilidade & Telemetria Distribuída (Prometheus + Grafana + OpenTelemetry)
@@ -195,6 +197,7 @@ graph TD
 
 | Serviço / Endpoint | URL | Credenciais / Notas |
 | :--- | :--- | :--- |
+| **NexusFlow Web Engine (Frontend)** | [http://localhost:8085/index.html](http://localhost:8085/index.html) | NexusFlow — Enterprise Distributed Order & Inventory Engine |
 | **Swagger UI (OpenAPI 3.0)** | [http://localhost:8085/swagger-ui.html](http://localhost:8085/swagger-ui.html) | Documentação interativa de todos os endpoints |
 | **Actuator Health & Metrics** | [http://localhost:8085/actuator/health](http://localhost:8085/actuator/health) | Status do Postgres, Redis, Kafka e Probes |
 | **Prometheus Metrics** | [http://localhost:8085/actuator/prometheus](http://localhost:8085/actuator/prometheus) | Métricas técnicas e contadores de negócio |
