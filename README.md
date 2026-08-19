@@ -157,14 +157,33 @@ Interactive API documentation is available via **Swagger UI** at `http://localho
 - Java 17+
 - Docker & Docker Compose
 
-### 2. Start Database Infrastructure
+## 🚀 Como Executar o Projeto com 1 Único Comando
+
+Criamos um script que automatiza tudo (abre o Docker Desktop se estiver fechado, sobe o PostgreSQL 16, Redis 7, Kafka, Prometheus, Grafana, aguarda o banco ficar pronto e inicia a aplicação Spring Boot):
+
 ```powershell
+.\start.ps1
+```
+*Ou simplesmente dê dois cliques no arquivo `start.bat`.*
+
+---
+
+### Execução Manual por Etapas (Opcional):
+
+#### 1. Iniciar a Infraestrutura com Docker Compose
+```bash
 docker compose -f docker/docker-compose.yml up -d
 ```
-*PostgreSQL will be running on `localhost:5432` and pgAdmin on `http://localhost:5050`.*
+Serviços iniciados:
+- **PostgreSQL 16**: `localhost:5433` (isolado para não colidir com Postgres local)
+- **Redis 7**: `localhost:6379`
+- **Apache Kafka (KRaft)**: `localhost:9092`
+- **Prometheus**: `http://localhost:9090`
+- **Grafana**: `http://localhost:3000` (admin / admin)
+- **pgAdmin**: `http://localhost:5050` (admin@nexusflow.com / admin)
 
-### 3. Run NexusFlow
-```powershell
+#### 2. Iniciar a Aplicação Spring Boot
+```bash
 .\mvnw.cmd spring-boot:run
 ```
 
