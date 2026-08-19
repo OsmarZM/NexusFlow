@@ -140,6 +140,7 @@ class ProductionLiveFlowE2ETest {
                 .build();
 
         when(userRepository.findByUsernameOrEmail("admin")).thenReturn(Optional.of(adminUser));
+        when(passwordEncoder.matches("Admin@123456", adminUser.getPassword())).thenReturn(true);
 
         AuthResponseDTO authResponse = authService.login(new AuthRequestDTO("admin", "Admin@123456"));
 

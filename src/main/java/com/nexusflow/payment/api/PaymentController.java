@@ -22,7 +22,7 @@ public class PaymentController {
 
     private final PaymentService paymentService;
 
-    @PostMapping("/process")
+    @PostMapping({"", "/process"})
     @Operation(summary = "Process or simulate payment for an order")
     public ResponseEntity<PaymentResponseDTO> processPayment(
             @Valid @RequestBody PaymentRequestDTO request,

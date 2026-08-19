@@ -14,6 +14,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @RestControllerAdvice
+@lombok.extern.slf4j.Slf4j
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(ResourceNotFoundException.class)
@@ -67,6 +68,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ProblemDetail handleGenericException(Exception ex, HttpServletRequest request) {
+        log.error("Unhandled exception processing request [{}]: ", request.getRequestURI(), ex);
         ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR, "An unexpected internal server error occurred.");
         problemDetail.setTitle("Internal Server Error");
         problemDetail.setType(URI.create("https://nexusflow.io/errors/internal-server-error"));

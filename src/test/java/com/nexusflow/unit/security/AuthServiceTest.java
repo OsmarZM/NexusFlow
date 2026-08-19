@@ -59,7 +59,7 @@ class AuthServiceTest {
                 .build();
 
         when(userRepository.findByUsernameOrEmail("admin")).thenReturn(Optional.of(user));
-        when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class))).thenReturn(null);
+        when(passwordEncoder.matches("Admin@123456", user.getPassword())).thenReturn(true);
         when(jwtService.generateToken(user)).thenReturn("mock-jwt-token");
 
         AuthResponseDTO response = authService.login(request);
@@ -68,7 +68,7 @@ class AuthServiceTest {
         assertThat(response.accessToken()).isEqualTo("mock-jwt-token");
         assertThat(response.username()).isEqualTo("admin");
         assertThat(response.roles()).contains("ADMIN");
-        verify(authenticationManager, times(1)).authenticate(any());
+        verify(passwordEncoder, times(1)).matches(eq("Admin@123456"), any());
     }
 
     @Test

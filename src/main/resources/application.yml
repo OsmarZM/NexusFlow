@@ -1,5 +1,6 @@
 server:
   port: ${SERVER_PORT:8085}
+  shutdown: graceful
 
 spring:
   application:
@@ -40,14 +41,14 @@ spring:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
       properties:
-        spring.json.add.type.headers: false
+        spring.json.add.type.headers: true
     consumer:
       group-id: nexusflow-group
       auto-offset-reset: earliest
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       properties:
-        spring.json.trusted.packages: "com.nexusflow.*"
+        spring.json.trusted.packages: "*"
     listener:
       missing-topics-fatal: false
 
@@ -81,10 +82,6 @@ nexusflow:
       inventory-released: inventory.released
       payment-requested: payments.requested
       payment-processed: payments.processed
-
-server:
-  port: 8080
-  shutdown: graceful
 
 management:
   endpoints:

@@ -38,12 +38,9 @@ public class AuthService {
         User user = userRepository.findByUsernameOrEmail(request.usernameOrEmail().trim())
                 .orElseThrow(() -> new BusinessException("Invalid username/email or password"));
 
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        user.getUsername(),
-                        request.password()
-                )
-        );
+        if (!passwordEncoder.matches(request.password(), user.getPassword())) {
+            throw new BusinessException("Invalid username/email or password");
+        }
 
         String token = jwtService.generateToken(user);
         log.info("User {} successfully authenticated", user.getUsername());
