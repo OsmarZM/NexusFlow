@@ -1,109 +1,103 @@
 # ==============================================================================
-# NexusFlow — All-in-One Startup Automation Script
+# NexusFlow - All-in-One Startup Automation Script
 # ==============================================================================
-# 1. Starts Docker Desktop (if not running) and waits for Docker daemon
-# 2. Starts all infrastructure containers via Docker Compose (Postgres, Redis, Kafka, Prometheus, Grafana)
-# 3. Waits for PostgreSQL to be fully ready on port 5433
-# 4. Launches the NexusFlow Spring Boot Application
-# ==============================================================================
-
 $ErrorActionPreference = "Continue"
 
 Write-Host "=================================================================" -ForegroundColor Cyan
-Write-Host " 🚀 NEXUSFLOW PLATFORM — INICIALIZAÇÃO AUTOMÁTICA COMPLETA" -ForegroundColor Cyan
+Write-Host " NEXUSFLOW PLATFORM - INICIALIZACAO AUTOMATICA COMPLETA" -ForegroundColor Cyan
 Write-Host "=================================================================" -ForegroundColor Cyan
 Write-Host ""
 
-# ------------------------------------------------------------------------------
 # 1. VERIFICAR / INICIAR DOCKER DESKTOP
-# ------------------------------------------------------------------------------
-Write-Host "🔍 [1/4] Verificando status do Docker Desktop..." -ForegroundColor Yellow
+Write-Host "[1/4] Verificando status do Docker..." -ForegroundColor Yellow
 
 $dockerReady = $false
-docker ps 2>$null | Out-Null
-if ($LASTEXITCODE -eq 0) {
-    $dockerReady = $true
-    Write-Host "  ✅ Docker daemon já está em execução!" -ForegroundColor Green
-} else {
-    Write-Host "  ⚡ Docker Desktop está fechado. Iniciando aplicativo..." -ForegroundColor Magenta
-    
+try {
+    & docker ps 2>$null | Out-Null
+    if ($LASTEXITCODE -eq 0) {
+        $dockerReady = $true
+        Write-Host "  [OK] Docker daemon esta em execucao!" -ForegroundColor Green
+    }
+} catch {
+    $dockerReady = $false
+}
+
+if (-not $dockerReady) {
+    Write-Host "  [!] Docker Desktop esta fechado. Iniciando aplicativo..." -ForegroundColor Magenta
     $dockerPath = "C:\Program Files\Docker\Docker\Docker Desktop.exe"
     if (Test-Path $dockerPath) {
         Start-Process $dockerPath
     } else {
-        Write-Host "  ⚠️ Executável do Docker Desktop não encontrado em $dockerPath." -ForegroundColor Red
-        Write-Host "     Por favor, abra o Docker Desktop manualmente." -ForegroundColor Yellow
+        Write-Host "  [WARN] Executavel nao encontrado em $dockerPath" -ForegroundColor Red
     }
 
-    Write-Host "  ⏳ Aguardando o Docker daemon inicializar (isso pode levar até 30s)..." -ForegroundColor DarkGray
+    Write-Host "  Aguardando Docker daemon inicializar..." -ForegroundColor DarkGray
     for ($i = 1; $i -le 40; $i++) {
         Start-Sleep -Seconds 2
-        docker ps 2>$null | Out-Null
-        if ($LASTEXITCODE -eq 0) {
-            $dockerReady = $true
-            Write-Host "  ✅ Docker daemon conectado e pronto!" -ForegroundColor Green
-            break
-        }
+        try {
+            & docker ps 2>$null | Out-Null
+            if ($LASTEXITCODE -eq 0) {
+                $dockerReady = $true
+                Write-Host "  [OK] Docker daemon conectado e pronto!" -ForegroundColor Green
+                break
+            }
+        } catch {}
         Write-Host -NoNewline "."
     }
     Write-Host ""
 }
 
 if (-not $dockerReady) {
-    Write-Host "❌ Não foi possível conectar ao Docker. Verifique se o Docker Desktop abriu corretamente e tente novamente." -ForegroundColor Red
+    Write-Host "[ERRO] Nao foi possivel conectar ao Docker. Abra o Docker Desktop manualmente." -ForegroundColor Red
     exit 1
 }
 
-# ------------------------------------------------------------------------------
 # 2. SUBIR CONTAINERS DO DOCKER COMPOSE
-# ------------------------------------------------------------------------------
 Write-Host ""
-Write-Host "📦 [2/4] Subindo infraestrutura (Postgres 16, Redis 7, Kafka, Prometheus, Grafana)..." -ForegroundColor Yellow
+Write-Host "[2/4] Subindo infraestrutura (Postgres 16, Redis 7, Kafka, Prometheus, Grafana)..." -ForegroundColor Yellow
 
-docker compose -f docker/docker-compose.yml up -d
+& docker compose -f docker/docker-compose.yml up -d
 
 if ($LASTEXITCODE -ne 0) {
-    Write-Host "❌ Falha ao subir os containers via docker compose." -ForegroundColor Red
+    Write-Host "[ERRO] Falha ao subir os containers via docker compose." -ForegroundColor Red
     exit 1
 }
-Write-Host "  ✅ Containers de infraestrutura iniciados em background!" -ForegroundColor Green
+Write-Host "  [OK] Containers iniciados com sucesso!" -ForegroundColor Green
 
-# ------------------------------------------------------------------------------
 # 3. AGUARDAR O POSTGRESQL ESTAR PRONTO NA PORTA 5433
-# ------------------------------------------------------------------------------
 Write-Host ""
-Write-Host "⏳ [3/4] Aguardando PostgreSQL (porta 5433) aceitar conexões..." -ForegroundColor Yellow
+Write-Host "[3/4] Aguardando PostgreSQL (porta 5433) aceitar conexoes..." -ForegroundColor Yellow
 
 $dbReady = $false
-for ($i = 1; $i -le 25; $i++) {
-    docker exec nexusflow-postgres pg_isready -U nexusflow_user -d nexusflow_db 2>$null | Out-Null
-    if ($LASTEXITCODE -eq 0) {
-        $dbReady = $true
-        Write-Host "  ✅ PostgreSQL está pronto e aceitando conexões!" -ForegroundColor Green
-        break
-    }
+for ($i = 1; $i -le 30; $i++) {
+    try {
+        & docker exec nexusflow-postgres pg_isready -U nexusflow_user -d nexusflow_db 2>$null | Out-Null
+        if ($LASTEXITCODE -eq 0) {
+            $dbReady = $true
+            Write-Host "  [OK] PostgreSQL pronto e aceitando conexoes!" -ForegroundColor Green
+            break
+        }
+    } catch {}
     Start-Sleep -Seconds 1
     Write-Host -NoNewline "."
 }
 Write-Host ""
 
 if (-not $dbReady) {
-    Write-Host "⚠️ PostgreSQL demorou para responder, tentando prosseguir..." -ForegroundColor Yellow
+    Write-Host "  [AVISO] Continuando inicializacao..." -ForegroundColor Yellow
 }
 
-# ------------------------------------------------------------------------------
-# 4. INICIAR A APLICAÇÃO SPRING BOOT
-# ------------------------------------------------------------------------------
+# 4. INICIAR A APLICACAO SPRING BOOT
 Write-Host ""
-Write-Host "☕ [4/4] Inicializando aplicação Spring Boot (NexusFlow)..." -ForegroundColor Green
+Write-Host "[4/4] Inicializando aplicacao Spring Boot (NexusFlow)..." -ForegroundColor Green
 Write-Host "=================================================================" -ForegroundColor Cyan
-Write-Host " 🌐 Endpoints que estarão disponíveis:" -ForegroundColor Cyan
-Write-Host "   • Swagger UI:   http://localhost:8080/swagger-ui.html" -ForegroundColor DarkCyan
-Write-Host "   • Actuator:     http://localhost:8080/actuator/health" -ForegroundColor DarkCyan
-Write-Host "   • Prometheus:   http://localhost:8080/actuator/prometheus" -ForegroundColor DarkCyan
-Write-Host "   • Grafana:      http://localhost:3000 (admin/admin)" -ForegroundColor DarkCyan
-Write-Host "   • pgAdmin:      http://localhost:5050 (admin@nexusflow.com/admin)" -ForegroundColor DarkCyan
+Write-Host " Endpoints disponiveis apos inicializacao:" -ForegroundColor Cyan
+Write-Host "   - Swagger UI:   http://localhost:8080/swagger-ui.html" -ForegroundColor DarkCyan
+Write-Host "   - Actuator:     http://localhost:8080/actuator/health" -ForegroundColor DarkCyan
+Write-Host "   - Prometheus:   http://localhost:8080/actuator/prometheus" -ForegroundColor DarkCyan
+Write-Host "   - Grafana:      http://localhost:3000 (admin/admin)" -ForegroundColor DarkCyan
+Write-Host "   - pgAdmin:      http://localhost:5050 (admin@nexusflow.com/admin)" -ForegroundColor DarkCyan
 Write-Host "=================================================================" -ForegroundColor Cyan
 Write-Host ""
 
-.\mvnw.cmd spring-boot:run
+& .\mvnw.cmd spring-boot:run
