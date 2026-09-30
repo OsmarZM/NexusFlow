@@ -270,4 +270,4 @@ Todas as decisões arquiteturais estão formalmente documentadas em [`docs/adr/`
 ---
 
 ## 👨‍💻 Autor & Filosofia de Engenharia
-Desenvolvido por **Osmar Zanardi Machado** como demonstração de engenharia backend sênior em Java & Spring Boot, aplicando Domain-Driven Design, padrões distribuídos resilientes e observabilidade cloud-native.
+Desenvolvido por **Osmar Zanateli Moreno** como demonstração de engenharia backend sênior em Java & Spring Boot, aplicando Domain-Driven Design, padrões distribuídos resilientes e observabilidade cloud-native.
